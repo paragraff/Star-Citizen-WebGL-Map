@@ -46,7 +46,7 @@ function createInfoLink ( system, noSymbols, noTarget ) {
 function displayInfo ( system, doNotSwitch ) {
   let previous = null;
   let next = null;
-  let currentStep = map.route().indexOfCurrentRoute( system );
+  let currentStep = '0' // map.route().indexOfCurrentRoute( system );
 
   if ( typeof currentStep === 'number' )
   {

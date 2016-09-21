@@ -105,7 +105,7 @@ class UI {
             Bloom: settings.effect.Bloom
           }
         },
-        route: RouteUI.templateData( map.route() )
+        //route: RouteUI.templateData( map.route() )
       })
     );
 
@@ -212,22 +212,22 @@ class UI {
     $('#sc-map-interface').on( 'change', '.sc-map-avoid-hostile', function() {
       settings.route.avoidHostile = this.checked;
       settings.save( 'route' );
-      map.route().update();
-      map.route().storeToSession();
+      //map.route().update();
+      //map.route().storeToSession();
     });
 
     $('#sc-map-interface').on( 'change', '.sc-map-avoid-unknown-jumppoints', function() {
       settings.route.avoidUnknownJumppoints = this.checked;
       settings.save( 'route' );
-      map.route().update();
-      map.route().storeToSession();
+      //map.route().update();
+      //map.route().storeToSession();
     });
 
     $('#sc-map-interface').on( 'change', '.sc-map-avoid-off-limits', function() {
       settings.route.avoidOffLimits = this.checked;
       settings.save( 'route' );
-      map.route().update();
-      map.route().storeToSession();
+      //map.route().update();
+      //map.route().storeToSession();
     });
 
     // UI width slider / settings handling
@@ -398,14 +398,14 @@ class UI {
       event.preventDefault();
       let $this = $(this);
       let system = StarSystem.getById( $this.data('system') );
-      map.route().removeWaypoint( system );
-      map.route().update();
-      map.route().storeToSession();
+      //map.route().removeWaypoint( system );
+      //map.route().update();
+      //map.route().storeToSession();
     });
 
     $('#sc-map-interface').on( 'click', 'button.delete-route', function( event ) {
-      map.route().destroy();
-      map.route().storeToSession();
+      //map.route().destroy();
+      //map.route().storeToSession();
     });
 
     let updateComments = function( event ) {
@@ -454,7 +454,7 @@ class UI {
         .setToBeAvoidedState( this.checked )
         .refreshIcons();
       settings.save( 'systems' );
-      map.route().rebuildCurrentRoute();
+      //map.route().rebuildCurrentRoute();
     });
 
     // Init the mousewheel plugin ("import" alone doesn't cut it)

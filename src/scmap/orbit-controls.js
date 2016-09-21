@@ -562,7 +562,7 @@ THREE.OrbitControls = function ( object, domElement ) {
     // Leeft addition start
     if ( state === STATE.DRAGROUTE )
     {
-      const system = systemIndicated( event );
+      /*const system = systemIndicated( event );
       if ( system ) {
         scope.endObject = system;
         if ( system !== scope.startObject ) {
@@ -576,7 +576,7 @@ THREE.OrbitControls = function ( object, domElement ) {
           scope.map.setSelectionTo( system );
           UI.displayInfoOn( system );
         }
-      }
+      }*/
     }
 
     scope.dispatchEvent( changeEvent );
@@ -806,7 +806,7 @@ THREE.OrbitControls = function ( object, domElement ) {
     // Leeft addition start
     if ( state === STATE.DRAGROUTE )
     {
-      const system = systemIndicated( event );
+     /* const system = systemIndicated( event );
       if ( system ) {
         scope.endObject = system;
         if ( system !== scope.startObject ) {
@@ -820,7 +820,7 @@ THREE.OrbitControls = function ( object, domElement ) {
           scope.map.setSelectionTo( system );
           UI.displayInfoOn( system );
         }
-      }
+      }*/
     }
 
     scope.dispatchEvent( changeEvent );
@@ -950,7 +950,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
     //UI.endHoverOverStarSystem(); // FIXME
 
-    if ( system ) {
+    if ( system && false ) {
 
       //UI.startHoverOverStarSystem(); // FIXME
 

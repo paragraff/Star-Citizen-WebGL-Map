@@ -33,3 +33,5 @@ vendor
 # Users Environment Variables
 .lock-wscript
 
+# IDE
+.idea/

@@ -5,6 +5,7 @@
 import SCMAP from '../scmap';
 import StarSystem from './star-system';
 import Goods from './goods';
+import Stars from '../helpers/mapGenerator';
 import Faction from './faction';
 import Dijkstra from './dijkstra';
 import Route from './route';
@@ -60,7 +61,7 @@ class Map {
 
     const map = this;
 
-    const getSystems          = xhrPromise( config.systemsJson );
+    const getSystems          = Promise.resolve(new Stars().generate()); // xhrPromise( config.systemsJson );
     const getStrategicValues  = xhrPromise( config.strategicValuesJson );
     const getFactions         = xhrPromise( config.factionsJson );
     const getCrimeLevels      = xhrPromise( config.crimeLevelsJson );
@@ -82,14 +83,14 @@ class Map {
 
       getSystems.then( systems => {
         try {
-          systems = JSON.parse( systems );
+         //systems = JSON.parse( systems );
           map.populate( systems );
         } catch( e ) {
           console.error( `Could not populate map:`, e );
           throw e;
         };
 
-        try {
+       /* try {
           const grid = buildReferenceGrid();
           grid.name = 'referenceGrid';
           map.scene.add( grid );
@@ -97,13 +98,13 @@ class Map {
           grid.updateMatrix();
         } catch( e ) {
           console.error( `Failed to create reference grid:`, e );
-        };
+        };*/
 
         UI.updateSystemsList();
-        renderer.controls.idle();
+       // renderer.controls.idle();
 
-        map.route().restoreFromSession();
-        map.route().update();
+       /* map.route().restoreFromSession();
+        map.route().update();*/
 
         if ( 'selectedSystem' in settings.storage ) {
           let selectedSystem = StarSystem.getById( settings.storage.selectedSystem );
@@ -212,7 +213,7 @@ class Map {
   }
 
   // Lazy builds the route
-  route () {
+  /*route () {
     if ( !( this._route instanceof Route ) ) {
       this._route = new Route();
       if ( config.debug ) {
@@ -221,7 +222,7 @@ class Map {
     }
 
     return this._route;
-  }
+  }*/
 
   setSelectionTo ( system ) {
     return this.__updateSelectorObject( system );
@@ -351,8 +352,11 @@ class Map {
     this.scene.add( this.geometry.interactables.mesh );
 
     // Generate an object for the jump points
-    this.geometry.jumpPoints = new JumpPoints( standardGeometryParameters );
-    this.scene.add( this.geometry.jumpPoints.mesh );
+    let jumpPointsCount = data.filter(system => system.jumpPoints && system.jumpPoints.length).length;
+    if (jumpPointsCount) {
+      this.geometry.jumpPoints = new JumpPoints( standardGeometryParameters );
+      this.scene.add( this.geometry.jumpPoints.mesh );
+    }
 
     // Glow sprites for the systems
     GLOW_MATERIAL_PROMISE.then( material => {
