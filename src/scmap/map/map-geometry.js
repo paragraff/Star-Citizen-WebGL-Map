@@ -7,10 +7,11 @@ class MapGeometry {
     allSystems: allSystems,
     renderer: renderer,
     initialScale: initialScale,
-  }) {
+  }, material) {
     this.allSystems = allSystems;
     this.renderer = renderer;
     this.initialScale = initialScale;
+    this.glowMaterial = material;
   }
 }
 

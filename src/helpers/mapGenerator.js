@@ -3,9 +3,9 @@ class MapGenerator {
     var stars = [];
     for (let i = 0; i < 2000; i++) {
       let coordinates = [
-        Math.random() * 1000 - 500,
-        Math.random() * 1000 - 500,
-        Math.random() * 1000 - 500
+        Math.random() * 100 - 50,
+        Math.random() * 100 - 50,
+        Math.random() * 100 - 50
       ];
       stars.push({
         coordinates: coordinates,

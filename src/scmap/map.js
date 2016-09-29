@@ -22,7 +22,7 @@ import { degToRad } from './three/math';
 
 import SelectedSystemGeometry from './map/geometry/selector';
 import { buildReferenceGrid } from './map/geometry/basic-grid';
-import SystemsGeometry from './map/geometry/systems';
+import SystemsGeometry, { GLOW_MATERIAL_SYSTEM_PROMISE } from './map/geometry/systems';
 import JumpPoints from './map/geometry/jump-points';
 import SystemLabels from './map/geometry/system-labels';
 import Interactables from './map/geometry/interactables';
@@ -317,7 +317,8 @@ class Map {
   }
 
   getIntersect ( event ) {
-    return this.geometry.interactables.getIntersect( event );
+    return false;
+    //return this.geometry.interactables.getIntersect( event );
   }
 
   syncCamera () {
@@ -337,9 +338,12 @@ class Map {
       initialScale: this.displayState.currentScale,
     };
 
-    // Generate an object for the star systems
-    this.geometry.systems = new SystemsGeometry( standardGeometryParameters );
-    this.scene.add( this.geometry.systems.mesh );
+
+    GLOW_MATERIAL_SYSTEM_PROMISE.then(function (material) {
+      // Generate an object for the star systems
+      this.geometry.systems = new SystemsGeometry( standardGeometryParameters, material);
+      this.scene.add( this.geometry.systems.mesh );
+    }.bind(this));
 
     waitForFontAwesome().then( () => {
       // Generate the labels for the star systems
@@ -348,8 +352,8 @@ class Map {
     });
 
     // Generate the proxy sprites for mouse/touch interaction
-    this.geometry.interactables = new Interactables( standardGeometryParameters );
-    this.scene.add( this.geometry.interactables.mesh );
+   /* this.geometry.interactables = new Interactables( standardGeometryParameters );
+    this.scene.add( this.geometry.interactables.mesh );*/
 
     // Generate an object for the jump points
     let jumpPointsCount = data.filter(system => system.jumpPoints && system.jumpPoints.length).length;
@@ -359,11 +363,11 @@ class Map {
     }
 
     // Glow sprites for the systems
-    GLOW_MATERIAL_PROMISE.then( material => {
+    /*GLOW_MATERIAL_PROMISE.then( material => {
       standardGeometryParameters.material = material;
       this.geometry.glow = new SystemGlow( standardGeometryParameters );
       this.scene.add( this.geometry.glow.mesh );
-    });
+    });*/
 
     console.info( `Populating the scene took ${ new Date().getTime() - startTime } msec` );
 

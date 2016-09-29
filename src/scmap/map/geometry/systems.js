@@ -8,20 +8,17 @@ import config from '../../config';
 
 import THREE from 'three';
 
-let STAR_LOD_MESHES;
-if ( config.quality === 'low' ) {
-  STAR_LOD_MESHES = [
-   [ new THREE.IcosahedronGeometry( 1, 1 ), 20 ],
-   [ new THREE.IcosahedronGeometry( 1, 0 ), 500 ],
-  ];
-} else {
-  STAR_LOD_MESHES = [
-   [ new THREE.IcosahedronGeometry( 1, 3 ),  20 ],
-   [ new THREE.IcosahedronGeometry( 1, 2 ), 150 ],
-   [ new THREE.IcosahedronGeometry( 1, 1 ), 250 ],
-   [ new THREE.IcosahedronGeometry( 1, 0 ), 500 ],
-  ];
-}
+const GLOW_MATERIAL_SYSTEM_PROMISE = new Promise(function (resolve, reject) {
+  var loader = new THREE.TextureLoader();
+  loader.load(config.glowImage, function (texture) {
+    resolve(new THREE.PointsMaterial({
+      map: texture,
+      sizeAttenuation: true
+    }));
+  }, function (){}, function (failure) {
+    reject(new Error('Could not load texture ' + config.glowImage + ': ' + failure));
+  });
+});
 
 class SystemsGeometry extends MapGeometry {
   get mesh () {
@@ -33,30 +30,27 @@ class SystemsGeometry extends MapGeometry {
     group.name = 'Star Systems Geometry';
     this._mesh = group;
 
-    const material = new THREE.MeshBasicMaterial({ name: 'Star material' });
+    //геометрия
+    var geometry = new THREE.Geometry();
+
+    //Материал системы частиц
+    var material = this.glowMaterial;
+
+    //Система частиц
+
 
     try {
       this.allSystems.forEach( system => {
-        // Build a LOD mesh for the stars to make them properly rounded
-        // when viewed up close yet low on geometry at a distance
-        const starLOD = new THREE.LOD();
-
-        for ( let i = 0; i < STAR_LOD_MESHES.length; i++ ) {
-          const star = new THREE.Mesh( STAR_LOD_MESHES[ i ][ 0 ], material );
-          star.scale.set( system.scale * config.renderScale, system.scale * config.renderScale, system.scale * config.renderScale );
-          star.updateMatrix();
-          star.matrixAutoUpdate = false;
-          starLOD.addLevel( star, STAR_LOD_MESHES[ i ][ 1 ] );
-        }
-
-        starLOD.position.copy( system.position );
-        starLOD.updateMatrix();
-        starLOD.matrixAutoUpdate = false;
-        starLOD.userData.isSystem = true;
-        starLOD.userData.isLOD = true;
-
-        group.add( starLOD );
+        var v = new THREE.Vector3().copy(system.position);
+        geometry.vertices.push(v);
       });
+
+      var particleSystem = new THREE.ParticleSystem(
+        geometry,
+        material
+      );
+
+      group.add(particleSystem);
 
       group.dynamic = false;
     } catch( e ) {
@@ -97,3 +91,4 @@ class SystemsGeometry extends MapGeometry {
 }
 
 export default SystemsGeometry;
+export { GLOW_MATERIAL_SYSTEM_PROMISE };
