@@ -97,7 +97,7 @@ $__System.register("5", ["6", "7"], function (_export) {
           value: function generate() {
             var stars = [];
             for (var i = 0; i < 2000; i++) {
-              var coordinates = [Math.random() * 1000 - 500, Math.random() * 1000 - 500, Math.random() * 1000 - 500];
+              var coordinates = [Math.random() * 100 - 50, Math.random() * 100 - 50, Math.random() * 100 - 50];
               stars.push({
                 coordinates: coordinates,
                 "crimeLevel": -1,
@@ -1599,8 +1599,8 @@ $__System.register('18', ['2', '4', '10', '19', 'd'], function (_export) {
     }
   };
 });
-$__System.register('1a', ['4', '6', '7', '1c', '1d', '1b', 'b', 'd'], function (_export) {
-  var THREE, _createClass, _classCallCheck, _get, _inherits, MapGeometry, settings, config, STAR_LOD_MESHES, SystemsGeometry;
+$__System.register('1a', ['4', '6', '7', '1c', '1d', '1e', '1b', 'b', 'd'], function (_export) {
+  var THREE, _createClass, _classCallCheck, _get, _inherits, _Promise, MapGeometry, settings, config, GLOW_MATERIAL_SYSTEM_PROMISE, SystemsGeometry;
 
   return {
     setters: [function (_3) {
@@ -1613,6 +1613,8 @@ $__System.register('1a', ['4', '6', '7', '1c', '1d', '1b', 'b', 'd'], function (
       _get = _c['default'];
     }, function (_d) {
       _inherits = _d['default'];
+    }, function (_e) {
+      _Promise = _e['default'];
     }, function (_b) {
       MapGeometry = _b['default'];
     }, function (_b2) {
@@ -1627,13 +1629,17 @@ $__System.register('1a', ['4', '6', '7', '1c', '1d', '1b', 'b', 'd'], function (
 
       'use strict';
 
-      STAR_LOD_MESHES = undefined;
-
-      if (config.quality === 'low') {
-        STAR_LOD_MESHES = [[new THREE.IcosahedronGeometry(1, 1), 20], [new THREE.IcosahedronGeometry(1, 0), 500]];
-      } else {
-        STAR_LOD_MESHES = [[new THREE.IcosahedronGeometry(1, 3), 20], [new THREE.IcosahedronGeometry(1, 2), 150], [new THREE.IcosahedronGeometry(1, 1), 250], [new THREE.IcosahedronGeometry(1, 0), 500]];
-      }
+      GLOW_MATERIAL_SYSTEM_PROMISE = new _Promise(function (resolve, reject) {
+        var loader = new THREE.TextureLoader();
+        loader.load(config.glowImage, function (texture) {
+          resolve(new THREE.PointsMaterial({
+            map: texture,
+            sizeAttenuation: true
+          }));
+        }, function () {}, function (failure) {
+          reject(new Error('Could not load texture ' + config.glowImage + ': ' + failure));
+        });
+      });
 
       SystemsGeometry = (function (_MapGeometry) {
         _inherits(SystemsGeometry, _MapGeometry);
@@ -1674,30 +1680,23 @@ $__System.register('1a', ['4', '6', '7', '1c', '1d', '1b', 'b', 'd'], function (
             group.name = 'Star Systems Geometry';
             this._mesh = group;
 
-            var material = new THREE.MeshBasicMaterial({ name: 'Star material' });
+            //геометрия
+            var geometry = new THREE.Geometry();
+
+            //Материал системы частиц
+            var material = this.glowMaterial;
+
+            //Система частиц
 
             try {
               this.allSystems.forEach(function (system) {
-                // Build a LOD mesh for the stars to make them properly rounded
-                // when viewed up close yet low on geometry at a distance
-                var starLOD = new THREE.LOD();
-
-                for (var i = 0; i < STAR_LOD_MESHES.length; i++) {
-                  var star = new THREE.Mesh(STAR_LOD_MESHES[i][0], material);
-                  star.scale.set(system.scale * config.renderScale, system.scale * config.renderScale, system.scale * config.renderScale);
-                  star.updateMatrix();
-                  star.matrixAutoUpdate = false;
-                  starLOD.addLevel(star, STAR_LOD_MESHES[i][1]);
-                }
-
-                starLOD.position.copy(system.position);
-                starLOD.updateMatrix();
-                starLOD.matrixAutoUpdate = false;
-                starLOD.userData.isSystem = true;
-                starLOD.userData.isLOD = true;
-
-                group.add(starLOD);
+                var v = new THREE.Vector3().copy(system.position);
+                geometry.vertices.push(v);
               });
+
+              var particleSystem = new THREE.ParticleSystem(geometry, material);
+
+              group.add(particleSystem);
 
               group.dynamic = false;
             } catch (e) {
@@ -1725,21 +1724,23 @@ $__System.register('1a', ['4', '6', '7', '1c', '1d', '1b', 'b', 'd'], function (
       })(MapGeometry);
 
       _export('default', SystemsGeometry);
+
+      _export('GLOW_MATERIAL_SYSTEM_PROMISE', GLOW_MATERIAL_SYSTEM_PROMISE);
     }
   };
 });
-$__System.register('1e', ['6', '7', 'a', '1f'], function (_export) {
-  var _createClass, _classCallCheck, StarSystem, Vector3, JumpPoint;
+$__System.register('1f', ['6', '7', '20', 'a'], function (_export) {
+  var _createClass, _classCallCheck, Vector3, StarSystem, JumpPoint;
 
   return {
     setters: [function (_) {
       _createClass = _['default'];
     }, function (_2) {
       _classCallCheck = _2['default'];
+    }, function (_3) {
+      Vector3 = _3.Vector3;
     }, function (_a) {
       StarSystem = _a['default'];
-    }, function (_f) {
-      Vector3 = _f.Vector3;
     }],
     execute: function () {
       /**
@@ -1954,7 +1955,7 @@ $__System.register('19', ['4', '6', '7'], function (_export) {
     }
   };
 });
-$__System.register('20', ['4', '6', '7', '19', '1c', '1d', '1b', '1e', 'd'], function (_export) {
+$__System.register('21', ['4', '6', '7', '19', '1c', '1d', '1b', '1f', 'd'], function (_export) {
   var THREE, _createClass, _classCallCheck, LineSegments, _get, _inherits, MapGeometry, JumpPoint, config, JumpPoints;
 
   return {
@@ -1972,8 +1973,8 @@ $__System.register('20', ['4', '6', '7', '19', '1c', '1d', '1b', '1e', 'd'], fun
       _inherits = _d['default'];
     }, function (_b) {
       MapGeometry = _b['default'];
-    }, function (_e) {
-      JumpPoint = _e['default'];
+    }, function (_f) {
+      JumpPoint = _f['default'];
     }, function (_d2) {
       config = _d2['default'];
     }],
@@ -2084,14 +2085,14 @@ $__System.register('20', ['4', '6', '7', '19', '1c', '1d', '1b', '1e', 'd'], fun
     }
   };
 });
-$__System.registerDynamic("21", ["22", "23", "24"], true, function($__require, exports, module) {
+$__System.registerDynamic("22", ["23", "24", "25"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
-  var anObject = $__require('22'),
-      get = $__require('23');
-  module.exports = $__require('24').getIterator = function(it) {
+  var anObject = $__require('23'),
+      get = $__require('24');
+  module.exports = $__require('25').getIterator = function(it) {
     var iterFn = get(it);
     if (typeof iterFn != 'function')
       throw TypeError(it + ' is not iterable!');
@@ -2100,75 +2101,75 @@ $__System.registerDynamic("21", ["22", "23", "24"], true, function($__require, e
   return module.exports;
 });
 
-$__System.registerDynamic("25", ["26", "27", "21"], true, function($__require, exports, module) {
+$__System.registerDynamic("26", ["27", "28", "22"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
-  $__require('26');
   $__require('27');
-  module.exports = $__require('21');
+  $__require('28');
+  module.exports = $__require('22');
   return module.exports;
 });
 
-$__System.registerDynamic("28", ["25"], true, function($__require, exports, module) {
+$__System.registerDynamic("29", ["26"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   module.exports = {
-    "default": $__require('25'),
+    "default": $__require('26'),
     __esModule: true
   };
   return module.exports;
 });
 
-$__System.registerDynamic("29", ["2a", "2b", "2c", "24"], true, function($__require, exports, module) {
+$__System.registerDynamic("2a", ["2b", "2c", "2d", "25"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
-  var classof = $__require('2a'),
-      ITERATOR = $__require('2b')('iterator'),
-      Iterators = $__require('2c');
-  module.exports = $__require('24').isIterable = function(it) {
+  var classof = $__require('2b'),
+      ITERATOR = $__require('2c')('iterator'),
+      Iterators = $__require('2d');
+  module.exports = $__require('25').isIterable = function(it) {
     var O = Object(it);
     return O[ITERATOR] !== undefined || '@@iterator' in O || Iterators.hasOwnProperty(classof(O));
   };
   return module.exports;
 });
 
-$__System.registerDynamic("2d", ["26", "27", "29"], true, function($__require, exports, module) {
+$__System.registerDynamic("2e", ["27", "28", "2a"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
-  $__require('26');
   $__require('27');
-  module.exports = $__require('29');
+  $__require('28');
+  module.exports = $__require('2a');
   return module.exports;
 });
 
-$__System.registerDynamic("2e", ["2d"], true, function($__require, exports, module) {
+$__System.registerDynamic("2f", ["2e"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   module.exports = {
-    "default": $__require('2d'),
+    "default": $__require('2e'),
     __esModule: true
   };
   return module.exports;
 });
 
-$__System.registerDynamic("10", ["28", "2e"], true, function($__require, exports, module) {
+$__System.registerDynamic("10", ["29", "2f"], true, function($__require, exports, module) {
   "use strict";
   ;
   var define,
       global = this,
       GLOBAL = this;
-  var _getIterator = $__require('28')["default"];
-  var _isIterable = $__require('2e')["default"];
+  var _getIterator = $__require('29')["default"];
+  var _isIterable = $__require('2f')["default"];
   exports["default"] = (function() {
     function sliceIterator(arr, i) {
       var _arr = [];
@@ -2210,7 +2211,7 @@ $__System.registerDynamic("10", ["28", "2e"], true, function($__require, exports
   return module.exports;
 });
 
-$__System.register('2f', ['6', '7'], function (_export) {
+$__System.register('30', ['6', '7'], function (_export) {
   var _createClass, _classCallCheck, KnapsackRectangle;
 
   return {
@@ -2299,7 +2300,7 @@ $__System.register('2f', ['6', '7'], function (_export) {
     }
   };
 });
-$__System.register('30', ['6', '7', '2f'], function (_export) {
+$__System.register('31', ['6', '7', '30'], function (_export) {
   var _createClass, _classCallCheck, KnapsackRectangle, KnapsackNode;
 
   return {
@@ -2307,8 +2308,8 @@ $__System.register('30', ['6', '7', '2f'], function (_export) {
       _createClass = _['default'];
     }, function (_2) {
       _classCallCheck = _2['default'];
-    }, function (_f) {
-      KnapsackRectangle = _f['default'];
+    }, function (_3) {
+      KnapsackRectangle = _3['default'];
     }],
     execute: function () {
       /**
@@ -2709,7 +2710,7 @@ $__System.register('30', ['6', '7', '2f'], function (_export) {
     }
   };
 });
-$__System.register('31', ['6', '7', '30'], function (_export) {
+$__System.register('32', ['6', '7', '31'], function (_export) {
   var _createClass, _classCallCheck, KnapsackNode, Knapsack;
 
   return {
@@ -2798,7 +2799,7 @@ $__System.register('31', ['6', '7', '30'], function (_export) {
     }
   };
 });
-$__System.register('32', ['6', '7', '31', '33'], function (_export) {
+$__System.register('33', ['6', '7', '32', '1e'], function (_export) {
   var _createClass, _classCallCheck, Knapsack, _Promise, TextureManager;
 
   return {
@@ -2806,10 +2807,10 @@ $__System.register('32', ['6', '7', '31', '33'], function (_export) {
       _createClass = _['default'];
     }, function (_2) {
       _classCallCheck = _2['default'];
-    }, function (_4) {
-      Knapsack = _4['default'];
     }, function (_3) {
-      _Promise = _3['default'];
+      Knapsack = _3['default'];
+    }, function (_e) {
+      _Promise = _e['default'];
     }],
     execute: function () {
       /**
@@ -3154,7 +3155,7 @@ $__System.register('32', ['6', '7', '31', '33'], function (_export) {
     }
   };
 });
-$__System.register('34', ['6', '7', '10', '32', '35'], function (_export) {
+$__System.register('34', ['6', '7', '10', '33', '35'], function (_export) {
   var _createClass, _classCallCheck, _slicedToArray, TextureManager, _Object$assign, DEFAULTS, Label;
 
   return {
@@ -3887,7 +3888,7 @@ $__System.registerDynamic("3a", ["3b", "3c"], true, function($__require, exports
   return module.exports;
 });
 
-$__System.registerDynamic("27", ["3a", "3d"], true, function($__require, exports, module) {
+$__System.registerDynamic("28", ["3a", "3d"], true, function($__require, exports, module) {
   "use strict";
   ;
   var define,
@@ -3939,7 +3940,7 @@ $__System.registerDynamic("3f", [], true, function($__require, exports, module) 
   return module.exports;
 });
 
-$__System.registerDynamic("40", ["41", "42", "43", "44", "2b"], true, function($__require, exports, module) {
+$__System.registerDynamic("40", ["41", "42", "43", "44", "2c"], true, function($__require, exports, module) {
   "use strict";
   ;
   var define,
@@ -3949,7 +3950,7 @@ $__System.registerDynamic("40", ["41", "42", "43", "44", "2b"], true, function($
       descriptor = $__require('42'),
       setToStringTag = $__require('43'),
       IteratorPrototype = {};
-  $__require('44')(IteratorPrototype, $__require('2b')('iterator'), function() {
+  $__require('44')(IteratorPrototype, $__require('2c')('iterator'), function() {
     return this;
   });
   module.exports = function(Constructor, NAME, next) {
@@ -3959,7 +3960,7 @@ $__System.registerDynamic("40", ["41", "42", "43", "44", "2b"], true, function($
   return module.exports;
 });
 
-$__System.registerDynamic("3d", ["45", "46", "47", "44", "48", "2c", "40", "43", "41", "2b"], true, function($__require, exports, module) {
+$__System.registerDynamic("3d", ["45", "46", "47", "44", "48", "2d", "40", "43", "41", "2c"], true, function($__require, exports, module) {
   "use strict";
   ;
   var define,
@@ -3970,11 +3971,11 @@ $__System.registerDynamic("3d", ["45", "46", "47", "44", "48", "2c", "40", "43",
       redefine = $__require('47'),
       hide = $__require('44'),
       has = $__require('48'),
-      Iterators = $__require('2c'),
+      Iterators = $__require('2d'),
       $iterCreate = $__require('40'),
       setToStringTag = $__require('43'),
       getProto = $__require('41').getProto,
-      ITERATOR = $__require('2b')('iterator'),
+      ITERATOR = $__require('2c')('iterator'),
       BUGGY = !([].keys && 'next' in [].keys()),
       FF_ITERATOR = '@@iterator',
       KEYS = 'keys',
@@ -4045,7 +4046,7 @@ $__System.registerDynamic("3d", ["45", "46", "47", "44", "48", "2c", "40", "43",
   return module.exports;
 });
 
-$__System.registerDynamic("49", ["3e", "3f", "2c", "4a", "3d"], true, function($__require, exports, module) {
+$__System.registerDynamic("49", ["3e", "3f", "2d", "4a", "3d"], true, function($__require, exports, module) {
   "use strict";
   ;
   var define,
@@ -4053,7 +4054,7 @@ $__System.registerDynamic("49", ["3e", "3f", "2c", "4a", "3d"], true, function($
       GLOBAL = this;
   var addToUnscopables = $__require('3e'),
       step = $__require('3f'),
-      Iterators = $__require('2c'),
+      Iterators = $__require('2d'),
       toIObject = $__require('4a');
   module.exports = $__require('3d')(Array, 'Array', function(iterated, kind) {
     this._t = toIObject(iterated);
@@ -4080,13 +4081,13 @@ $__System.registerDynamic("49", ["3e", "3f", "2c", "4a", "3d"], true, function($
   return module.exports;
 });
 
-$__System.registerDynamic("26", ["49", "2c"], true, function($__require, exports, module) {
+$__System.registerDynamic("27", ["49", "2d"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   $__require('49');
-  var Iterators = $__require('2c');
+  var Iterators = $__require('2d');
   Iterators.NodeList = Iterators.HTMLCollection = Iterators.Array;
   return module.exports;
 });
@@ -4113,12 +4114,12 @@ $__System.registerDynamic("4b", [], true, function($__require, exports, module) 
   return module.exports;
 });
 
-$__System.registerDynamic("4c", ["22"], true, function($__require, exports, module) {
+$__System.registerDynamic("4c", ["23"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
-  var anObject = $__require('22');
+  var anObject = $__require('23');
   module.exports = function(iterator, fn, value, entries) {
     try {
       return entries ? fn(anObject(value)[0], value[1]) : fn(value);
@@ -4132,13 +4133,13 @@ $__System.registerDynamic("4c", ["22"], true, function($__require, exports, modu
   return module.exports;
 });
 
-$__System.registerDynamic("4d", ["2c", "2b"], true, function($__require, exports, module) {
+$__System.registerDynamic("4d", ["2d", "2c"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
-  var Iterators = $__require('2c'),
-      ITERATOR = $__require('2b')('iterator'),
+  var Iterators = $__require('2d'),
+      ITERATOR = $__require('2c')('iterator'),
       ArrayProto = Array.prototype;
   module.exports = function(it) {
     return it !== undefined && (Iterators.Array === it || ArrayProto[ITERATOR] === it);
@@ -4172,13 +4173,13 @@ $__System.registerDynamic("4e", ["3b"], true, function($__require, exports, modu
   return module.exports;
 });
 
-$__System.registerDynamic("2a", ["4f", "2b"], true, function($__require, exports, module) {
+$__System.registerDynamic("2b", ["4f", "2c"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   var cof = $__require('4f'),
-      TAG = $__require('2b')('toStringTag'),
+      TAG = $__require('2c')('toStringTag'),
       ARG = cof(function() {
         return arguments;
       }()) == 'Arguments';
@@ -4191,7 +4192,7 @@ $__System.registerDynamic("2a", ["4f", "2b"], true, function($__require, exports
   return module.exports;
 });
 
-$__System.registerDynamic("2c", [], true, function($__require, exports, module) {
+$__System.registerDynamic("2d", [], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
@@ -4200,22 +4201,22 @@ $__System.registerDynamic("2c", [], true, function($__require, exports, module) 
   return module.exports;
 });
 
-$__System.registerDynamic("23", ["2a", "2b", "2c", "24"], true, function($__require, exports, module) {
+$__System.registerDynamic("24", ["2b", "2c", "2d", "25"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
-  var classof = $__require('2a'),
-      ITERATOR = $__require('2b')('iterator'),
-      Iterators = $__require('2c');
-  module.exports = $__require('24').getIteratorMethod = function(it) {
+  var classof = $__require('2b'),
+      ITERATOR = $__require('2c')('iterator'),
+      Iterators = $__require('2d');
+  module.exports = $__require('25').getIteratorMethod = function(it) {
     if (it != undefined)
       return it[ITERATOR] || it['@@iterator'] || Iterators[classof(it)];
   };
   return module.exports;
 });
 
-$__System.registerDynamic("50", ["51", "4c", "4d", "22", "4e", "23"], true, function($__require, exports, module) {
+$__System.registerDynamic("50", ["51", "4c", "4d", "23", "4e", "24"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
@@ -4223,9 +4224,9 @@ $__System.registerDynamic("50", ["51", "4c", "4d", "22", "4e", "23"], true, func
   var ctx = $__require('51'),
       call = $__require('4c'),
       isArrayIter = $__require('4d'),
-      anObject = $__require('22'),
+      anObject = $__require('23'),
       toLength = $__require('4e'),
-      getIterFn = $__require('23');
+      getIterFn = $__require('24');
   module.exports = function(iterable, entries, fn, that) {
     var iterFn = getIterFn(iterable),
         f = ctx(fn, that, entries ? 2 : 1),
@@ -4258,14 +4259,14 @@ $__System.registerDynamic("52", [], true, function($__require, exports, module) 
   return module.exports;
 });
 
-$__System.registerDynamic("53", ["22", "54", "2b"], true, function($__require, exports, module) {
+$__System.registerDynamic("53", ["23", "54", "2c"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
-  var anObject = $__require('22'),
+  var anObject = $__require('23'),
       aFunction = $__require('54'),
-      SPECIES = $__require('2b')('species');
+      SPECIES = $__require('2c')('species');
   module.exports = function(O, D) {
     var C = anObject(O).constructor,
         S;
@@ -4545,14 +4546,14 @@ $__System.registerDynamic("48", [], true, function($__require, exports, module) 
   return module.exports;
 });
 
-$__System.registerDynamic("43", ["41", "48", "2b"], true, function($__require, exports, module) {
+$__System.registerDynamic("43", ["41", "48", "2c"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   var def = $__require('41').setDesc,
       has = $__require('48'),
-      TAG = $__require('2b')('toStringTag');
+      TAG = $__require('2c')('toStringTag');
   module.exports = function(it, tag, stat) {
     if (it && !has(it = stat ? it : it.prototype, TAG))
       def(it, TAG, {
@@ -4576,16 +4577,16 @@ $__System.registerDynamic("5d", ["5f"], true, function($__require, exports, modu
   return module.exports;
 });
 
-$__System.registerDynamic("60", ["24", "41", "5d", "2b"], true, function($__require, exports, module) {
+$__System.registerDynamic("60", ["25", "41", "5d", "2c"], true, function($__require, exports, module) {
   "use strict";
   ;
   var define,
       global = this,
       GLOBAL = this;
-  var core = $__require('24'),
+  var core = $__require('25'),
       $ = $__require('41'),
       DESCRIPTORS = $__require('5d'),
-      SPECIES = $__require('2b')('species');
+      SPECIES = $__require('2c')('species');
   module.exports = function(KEY) {
     var C = core[KEY];
     if (DESCRIPTORS && C && !C[SPECIES])
@@ -4626,7 +4627,7 @@ $__System.registerDynamic("62", [], true, function($__require, exports, module) 
   return module.exports;
 });
 
-$__System.registerDynamic("2b", ["61", "62", "57"], true, function($__require, exports, module) {
+$__System.registerDynamic("2c", ["61", "62", "57"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
@@ -4640,12 +4641,12 @@ $__System.registerDynamic("2b", ["61", "62", "57"], true, function($__require, e
   return module.exports;
 });
 
-$__System.registerDynamic("63", ["2b"], true, function($__require, exports, module) {
+$__System.registerDynamic("63", ["2c"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
-  var ITERATOR = $__require('2b')('iterator'),
+  var ITERATOR = $__require('2c')('iterator'),
       SAFE_CLOSING = false;
   try {
     var riter = [7][ITERATOR]();
@@ -4676,7 +4677,7 @@ $__System.registerDynamic("63", ["2b"], true, function($__require, exports, modu
   return module.exports;
 });
 
-$__System.registerDynamic("64", ["41", "45", "57", "51", "2a", "46", "59", "22", "54", "4b", "50", "65", "52", "2b", "53", "5c", "5d", "5e", "43", "60", "24", "63", "5b"], true, function($__require, exports, module) {
+$__System.registerDynamic("64", ["41", "45", "57", "51", "2b", "46", "59", "23", "54", "4b", "50", "65", "52", "2c", "53", "5c", "5d", "5e", "43", "60", "25", "63", "5b"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
@@ -4687,16 +4688,16 @@ $__System.registerDynamic("64", ["41", "45", "57", "51", "2a", "46", "59", "22",
         LIBRARY = $__require('45'),
         global = $__require('57'),
         ctx = $__require('51'),
-        classof = $__require('2a'),
+        classof = $__require('2b'),
         $export = $__require('46'),
         isObject = $__require('59'),
-        anObject = $__require('22'),
+        anObject = $__require('23'),
         aFunction = $__require('54'),
         strictNew = $__require('4b'),
         forOf = $__require('50'),
         setProto = $__require('65').set,
         same = $__require('52'),
-        SPECIES = $__require('2b')('species'),
+        SPECIES = $__require('2c')('species'),
         speciesConstructor = $__require('53'),
         asap = $__require('5c'),
         PROMISE = 'Promise',
@@ -4924,7 +4925,7 @@ $__System.registerDynamic("64", ["41", "45", "57", "51", "2a", "46", "59", "22",
     $export($export.G + $export.W + $export.F * !USE_NATIVE, {Promise: P});
     $__require('43')(P, PROMISE);
     $__require('60')(PROMISE);
-    Wrapper = $__require('24')[PROMISE];
+    Wrapper = $__require('25')[PROMISE];
     $export($export.S + $export.F * !USE_NATIVE, PROMISE, {reject: function reject(r) {
         var capability = new PromiseCapability(this),
             $$reject = capability.reject;
@@ -4988,20 +4989,20 @@ $__System.registerDynamic("64", ["41", "45", "57", "51", "2a", "46", "59", "22",
   return module.exports;
 });
 
-$__System.registerDynamic("66", ["39", "27", "26", "64", "24"], true, function($__require, exports, module) {
+$__System.registerDynamic("66", ["39", "28", "27", "64", "25"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   $__require('39');
+  $__require('28');
   $__require('27');
-  $__require('26');
   $__require('64');
-  module.exports = $__require('24').Promise;
+  module.exports = $__require('25').Promise;
   return module.exports;
 });
 
-$__System.registerDynamic("33", ["66"], true, function($__require, exports, module) {
+$__System.registerDynamic("1e", ["66"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
@@ -5027,7 +5028,7 @@ $__System.register("1b", ["7"], function (_export) {
 
       "use strict";
 
-      MapGeometry = function MapGeometry(_ref) {
+      MapGeometry = function MapGeometry(_ref, material) {
         var allSystems = _ref.allSystems;
         var renderer = _ref.renderer;
         var initialScale = _ref.initialScale;
@@ -5037,28 +5038,29 @@ $__System.register("1b", ["7"], function (_export) {
         this.allSystems = allSystems;
         this.renderer = renderer;
         this.initialScale = initialScale;
+        this.glowMaterial = material;
       };
 
       _export("default", MapGeometry);
     }
   };
 });
-$__System.register('67', ['4', '6', '7', '33', '1c', '1d', '1b', 'b', 'd'], function (_export) {
-  var THREE, _createClass, _classCallCheck, _Promise, _get, _inherits, MapGeometry, settings, config, GLOW_SCALE, BLACK, UNSET, GLOW_MATERIAL_PROMISE, SystemGlow;
+$__System.register('67', ['4', '6', '7', '1c', '1d', '1e', '1b', 'b', 'd'], function (_export) {
+  var THREE, _createClass, _classCallCheck, _get, _inherits, _Promise, MapGeometry, settings, config, GLOW_SCALE, BLACK, UNSET, GLOW_MATERIAL_PROMISE, SystemGlow;
 
   return {
-    setters: [function (_4) {
-      THREE = _4['default'];
+    setters: [function (_3) {
+      THREE = _3['default'];
     }, function (_) {
       _createClass = _['default'];
     }, function (_2) {
       _classCallCheck = _2['default'];
-    }, function (_3) {
-      _Promise = _3['default'];
     }, function (_c) {
       _get = _c['default'];
     }, function (_d) {
       _inherits = _d['default'];
+    }, function (_e) {
+      _Promise = _e['default'];
     }, function (_b) {
       MapGeometry = _b['default'];
     }, function (_b2) {
@@ -6203,8 +6205,8 @@ $__System.registerDynamic("12", ["68"], true, function($__require, exports, modu
   return module.exports;
 });
 
-$__System.register('69', ['1', '2', '5', '6', '7', '8', '9', '11', '12', '13', '14', '16', '17', '18', '20', '33', '37', '38', '67', 'a', '6a', '6b', 'e', '6c', 'd', 'b', '1f', '6d', '1a'], function (_export) {
-  var renderer, scene, SCMAP, Stars, _createClass, _classCallCheck, Dijkstra, hasLocalStorage, hasSessionStorage, xhrPromise, RSVP, DisplayState, TWEEN, waitForFontAwesome, SelectedSystemGeometry, buildReferenceGrid, JumpPoints, _Promise, SystemLabels, Interactables, SystemGlow, GLOW_MATERIAL_PROMISE, StarSystem, Goods, Faction, Route, UI, config, settings, Scene, Mesh, MeshBasicMaterial, Vector3, degToRad, SystemsGeometry, Map;
+$__System.register('69', ['1', '2', '5', '6', '7', '8', '9', '11', '12', '13', '14', '16', '17', '18', '20', '21', '37', '38', '67', '1e', 'a', '6a', '6b', 'e', '6c', 'd', 'b', '6d', '1a'], function (_export) {
+  var renderer, scene, SCMAP, Stars, _createClass, _classCallCheck, Dijkstra, hasLocalStorage, hasSessionStorage, xhrPromise, RSVP, DisplayState, TWEEN, waitForFontAwesome, SelectedSystemGeometry, buildReferenceGrid, Scene, Mesh, MeshBasicMaterial, Vector3, JumpPoints, SystemLabels, Interactables, SystemGlow, GLOW_MATERIAL_PROMISE, _Promise, StarSystem, Goods, Faction, Route, UI, config, settings, degToRad, SystemsGeometry, GLOW_MATERIAL_SYSTEM_PROMISE, Map;
 
   function scaleSelector(mesh, scaleY) {
     mesh.scale.y = scaleY * 4.0 * config.renderScale;
@@ -6212,40 +6214,43 @@ $__System.register('69', ['1', '2', '5', '6', '7', '8', '9', '11', '12', '13', '
   }
 
   return {
-    setters: [function (_9) {
-      renderer = _9.renderer;
-      scene = _9.scene;
+    setters: [function (_8) {
+      renderer = _8.renderer;
+      scene = _8.scene;
+    }, function (_3) {
+      SCMAP = _3['default'];
     }, function (_4) {
-      SCMAP = _4['default'];
-    }, function (_5) {
-      Stars = _5['default'];
+      Stars = _4['default'];
     }, function (_) {
       _createClass = _['default'];
     }, function (_2) {
       _classCallCheck = _2['default'];
-    }, function (_6) {
-      Dijkstra = _6['default'];
-    }, function (_8) {
-      hasLocalStorage = _8.hasLocalStorage;
-      hasSessionStorage = _8.hasSessionStorage;
+    }, function (_5) {
+      Dijkstra = _5['default'];
     }, function (_7) {
-      xhrPromise = _7['default'];
+      hasLocalStorage = _7.hasLocalStorage;
+      hasSessionStorage = _7.hasSessionStorage;
+    }, function (_6) {
+      xhrPromise = _6['default'];
     }, function (_19) {
       RSVP = _19['default'];
-    }, function (_10) {
-      DisplayState = _10['default'];
+    }, function (_9) {
+      DisplayState = _9['default'];
     }, function (_18) {
       TWEEN = _18['default'];
-    }, function (_11) {
-      waitForFontAwesome = _11['default'];
+    }, function (_10) {
+      waitForFontAwesome = _10['default'];
     }, function (_12) {
       SelectedSystemGeometry = _12['default'];
     }, function (_13) {
       buildReferenceGrid = _13.buildReferenceGrid;
+    }, function (_11) {
+      Scene = _11.Scene;
+      Mesh = _11.Mesh;
+      MeshBasicMaterial = _11.MeshBasicMaterial;
+      Vector3 = _11.Vector3;
     }, function (_14) {
       JumpPoints = _14['default'];
-    }, function (_3) {
-      _Promise = _3['default'];
     }, function (_15) {
       SystemLabels = _15['default'];
     }, function (_16) {
@@ -6253,29 +6258,27 @@ $__System.register('69', ['1', '2', '5', '6', '7', '8', '9', '11', '12', '13', '
     }, function (_17) {
       SystemGlow = _17['default'];
       GLOW_MATERIAL_PROMISE = _17.GLOW_MATERIAL_PROMISE;
+    }, function (_e) {
+      _Promise = _e['default'];
     }, function (_a) {
       StarSystem = _a['default'];
     }, function (_a2) {
       Goods = _a2['default'];
     }, function (_b) {
       Faction = _b['default'];
-    }, function (_e) {
-      Route = _e['default'];
+    }, function (_e2) {
+      Route = _e2['default'];
     }, function (_c) {
       UI = _c['default'];
     }, function (_d) {
       config = _d['default'];
     }, function (_b2) {
       settings = _b2['default'];
-    }, function (_f) {
-      Scene = _f.Scene;
-      Mesh = _f.Mesh;
-      MeshBasicMaterial = _f.MeshBasicMaterial;
-      Vector3 = _f.Vector3;
     }, function (_d2) {
       degToRad = _d2.degToRad;
     }, function (_a3) {
       SystemsGeometry = _a3['default'];
+      GLOW_MATERIAL_SYSTEM_PROMISE = _a3.GLOW_MATERIAL_SYSTEM_PROMISE;
     }],
     execute: function () {
       /**
@@ -6584,7 +6587,8 @@ $__System.register('69', ['1', '2', '5', '6', '7', '8', '9', '11', '12', '13', '
         }, {
           key: 'getIntersect',
           value: function getIntersect(event) {
-            return this.geometry.interactables.getIntersect(event);
+            return false;
+            //return this.geometry.interactables.getIntersect( event );
           }
         }, {
           key: 'syncCamera',
@@ -6608,9 +6612,11 @@ $__System.register('69', ['1', '2', '5', '6', '7', '8', '9', '11', '12', '13', '
               initialScale: this.displayState.currentScale
             };
 
-            // Generate an object for the star systems
-            this.geometry.systems = new SystemsGeometry(standardGeometryParameters);
-            this.scene.add(this.geometry.systems.mesh);
+            GLOW_MATERIAL_SYSTEM_PROMISE.then((function (material) {
+              // Generate an object for the star systems
+              this.geometry.systems = new SystemsGeometry(standardGeometryParameters, material);
+              this.scene.add(this.geometry.systems.mesh);
+            }).bind(this));
 
             waitForFontAwesome().then(function () {
               // Generate the labels for the star systems
@@ -6619,8 +6625,8 @@ $__System.register('69', ['1', '2', '5', '6', '7', '8', '9', '11', '12', '13', '
             });
 
             // Generate the proxy sprites for mouse/touch interaction
-            this.geometry.interactables = new Interactables(standardGeometryParameters);
-            this.scene.add(this.geometry.interactables.mesh);
+            /* this.geometry.interactables = new Interactables( standardGeometryParameters );
+             this.scene.add( this.geometry.interactables.mesh );*/
 
             // Generate an object for the jump points
             var jumpPointsCount = data.filter(function (system) {
@@ -6632,11 +6638,11 @@ $__System.register('69', ['1', '2', '5', '6', '7', '8', '9', '11', '12', '13', '
             }
 
             // Glow sprites for the systems
-            GLOW_MATERIAL_PROMISE.then(function (material) {
+            /*GLOW_MATERIAL_PROMISE.then( material => {
               standardGeometryParameters.material = material;
-              _this2.geometry.glow = new SystemGlow(standardGeometryParameters);
-              _this2.scene.add(_this2.geometry.glow.mesh);
-            });
+              this.geometry.glow = new SystemGlow( standardGeometryParameters );
+              this.scene.add( this.geometry.glow.mesh );
+            });*/
 
             console.info('Populating the scene took ' + (new Date().getTime() - startTime) + ' msec');
 
@@ -6669,13 +6675,13 @@ $__System.registerDynamic("4a", ["6e", "3c"], true, function($__require, exports
   return module.exports;
 });
 
-$__System.registerDynamic("6f", ["46", "24", "5f"], true, function($__require, exports, module) {
+$__System.registerDynamic("6f", ["46", "25", "5f"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   var $export = $__require('46'),
-      core = $__require('24'),
+      core = $__require('25'),
       fails = $__require('5f');
   module.exports = function(KEY, exec) {
     var fn = (core.Object || {})[KEY] || Object[KEY],
@@ -6782,7 +6788,7 @@ $__System.registerDynamic("59", [], true, function($__require, exports, module) 
   return module.exports;
 });
 
-$__System.registerDynamic("22", ["59"], true, function($__require, exports, module) {
+$__System.registerDynamic("23", ["59"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
@@ -6796,14 +6802,14 @@ $__System.registerDynamic("22", ["59"], true, function($__require, exports, modu
   return module.exports;
 });
 
-$__System.registerDynamic("65", ["41", "59", "22", "51"], true, function($__require, exports, module) {
+$__System.registerDynamic("65", ["41", "59", "23", "51"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   var getDesc = $__require('41').getDesc,
       isObject = $__require('59'),
-      anObject = $__require('22');
+      anObject = $__require('23');
   var check = function(O, proto) {
     anObject(O);
     if (!isObject(proto) && proto !== null)
@@ -6842,13 +6848,13 @@ $__System.registerDynamic("73", ["46", "65"], true, function($__require, exports
   return module.exports;
 });
 
-$__System.registerDynamic("74", ["73", "24"], true, function($__require, exports, module) {
+$__System.registerDynamic("74", ["73", "25"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   $__require('73');
-  module.exports = $__require('24').Object.setPrototypeOf;
+  module.exports = $__require('25').Object.setPrototypeOf;
   return module.exports;
 });
 
@@ -6902,13 +6908,13 @@ $__System.registerDynamic("77", ["46", "57"], true, function($__require, exports
   return module.exports;
 });
 
-$__System.registerDynamic("78", ["77", "24"], true, function($__require, exports, module) {
+$__System.registerDynamic("78", ["77", "25"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   $__require('77');
-  module.exports = $__require('24').Number.isFinite;
+  module.exports = $__require('25').Number.isFinite;
   return module.exports;
 });
 
@@ -8635,13 +8641,13 @@ $__System.registerDynamic("80", ["46"], true, function($__require, exports, modu
   return module.exports;
 });
 
-$__System.registerDynamic("81", ["80", "24"], true, function($__require, exports, module) {
+$__System.registerDynamic("81", ["80", "25"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   $__require('80');
-  module.exports = $__require('24').Number.isNaN;
+  module.exports = $__require('25').Number.isNaN;
   return module.exports;
 });
 
@@ -8854,8 +8860,8 @@ $__System.register('84', ['83'], function (_export) {
     }
   };
 });
-$__System.register('b', ['2', '6', '7', '9', 'd', '1f'], function (_export) {
-  var SCMAP, _createClass, _classCallCheck, hasLocalStorage, hasSessionStorage, config, Vector3, Settings;
+$__System.register('b', ['2', '6', '7', '9', '20', 'd'], function (_export) {
+  var SCMAP, _createClass, _classCallCheck, hasLocalStorage, hasSessionStorage, Vector3, config, Settings;
 
   return {
     setters: [function (_3) {
@@ -8867,10 +8873,10 @@ $__System.register('b', ['2', '6', '7', '9', 'd', '1f'], function (_export) {
     }, function (_4) {
       hasLocalStorage = _4.hasLocalStorage;
       hasSessionStorage = _4.hasSessionStorage;
+    }, function (_5) {
+      Vector3 = _5.Vector3;
     }, function (_d) {
       config = _d['default'];
-    }, function (_f) {
-      Vector3 = _f.Vector3;
     }],
     execute: function () {
       /**
@@ -9443,31 +9449,31 @@ $__System.register('89', ['1', '85', '88', '6c', '8a'], function (_export) {
     }
   };
 });
-$__System.register('8b', ['2', '9', '85', '89', 'a', '6b', '6c', '1f', '8c', '8a'], function (_export) {
+$__System.register('8b', ['2', '9', '20', '85', '89', 'a', '6b', '6c', '8c', '8a'], function (_export) {
   /**
     * @author Lianna Eeftinck / https://github.com/Leeft
     */
 
   'use strict';
 
-  var SCMAP, hasSessionStorage, $, createInfoLink, StarSystem, Faction, UI, Color, Handlebars, markdown, sectionLevel, tabCounter, storage;
+  var SCMAP, hasSessionStorage, Color, $, createInfoLink, StarSystem, Faction, UI, Handlebars, markdown, sectionLevel, tabCounter, storage;
   return {
     setters: [function (_) {
       SCMAP = _['default'];
     }, function (_2) {
       hasSessionStorage = _2.hasSessionStorage;
-    }, function (_4) {
-      $ = _4['default'];
     }, function (_3) {
-      createInfoLink = _3.createInfoLink;
+      Color = _3.Color;
+    }, function (_5) {
+      $ = _5['default'];
+    }, function (_4) {
+      createInfoLink = _4.createInfoLink;
     }, function (_a) {
       StarSystem = _a['default'];
     }, function (_b) {
       Faction = _b['default'];
     }, function (_c) {
       UI = _c['default'];
-    }, function (_f) {
-      Color = _f.Color;
     }, function (_c2) {
       Handlebars = _c2['default'];
     }, function (_a2) {
@@ -19142,16 +19148,21 @@ $__System.registerDynamic("c1", ["c0"], true, function($__require, exports, modu
   return module.exports;
 });
 
-$__System.register('c2', ['6', '7', '14', 'd', 'b', '7e', '6c', '1f', '6d', 'be', 'c1'], function (_export) {
-  var _createClass, _classCallCheck, TWEEN, config, settings, OrbitControls, UI, PerspectiveCamera, WebGLRenderer, Euler, Matrix4, degToRad, TextureManager, Stats, Renderer;
+$__System.register('c2', ['6', '7', '14', '20', 'd', 'b', '7e', '6c', '6d', 'be', 'c1'], function (_export) {
+  var _createClass, _classCallCheck, TWEEN, PerspectiveCamera, WebGLRenderer, Euler, Matrix4, config, settings, OrbitControls, UI, degToRad, TextureManager, Stats, Renderer;
 
   return {
     setters: [function (_) {
       _createClass = _['default'];
     }, function (_2) {
       _classCallCheck = _2['default'];
+    }, function (_4) {
+      TWEEN = _4['default'];
     }, function (_3) {
-      TWEEN = _3['default'];
+      PerspectiveCamera = _3.PerspectiveCamera;
+      WebGLRenderer = _3.WebGLRenderer;
+      Euler = _3.Euler;
+      Matrix4 = _3.Matrix4;
     }, function (_d) {
       config = _d['default'];
     }, function (_b) {
@@ -19160,11 +19171,6 @@ $__System.register('c2', ['6', '7', '14', 'd', 'b', '7e', '6c', '1f', '6d', 'be'
       OrbitControls = _e['default'];
     }, function (_c) {
       UI = _c['default'];
-    }, function (_f) {
-      PerspectiveCamera = _f.PerspectiveCamera;
-      WebGLRenderer = _f.WebGLRenderer;
-      Euler = _f.Euler;
-      Matrix4 = _f.Matrix4;
     }, function (_d2) {
       degToRad = _d2.degToRad;
     }, function (_be) {
@@ -25362,8 +25368,8 @@ $__System.register('6d', ['4'], function (_export) {
     }
   };
 });
-$__System.register('a', ['1', '2', '6', '7', '84', '6b', '1e', 'd', 'b', '1f', '6d'], function (_export) {
-  var map, SCMAP, _createClass, _classCallCheck, MapSymbols, Faction, JumpPoint, config, settings, Color, Vector3, generateUUID, UNSET, StarSystem;
+$__System.register('a', ['1', '2', '6', '7', '20', '84', '6b', '1f', 'd', 'b', '6d'], function (_export) {
+  var map, SCMAP, _createClass, _classCallCheck, Color, Vector3, MapSymbols, Faction, JumpPoint, config, settings, generateUUID, UNSET, StarSystem;
 
   return {
     setters: [function (_5) {
@@ -25374,19 +25380,19 @@ $__System.register('a', ['1', '2', '6', '7', '84', '6b', '1e', 'd', 'b', '1f', '
       _createClass = _['default'];
     }, function (_2) {
       _classCallCheck = _2['default'];
+    }, function (_6) {
+      Color = _6.Color;
+      Vector3 = _6.Vector3;
     }, function (_4) {
       MapSymbols = _4['default'];
     }, function (_b) {
       Faction = _b['default'];
-    }, function (_e) {
-      JumpPoint = _e['default'];
+    }, function (_f) {
+      JumpPoint = _f['default'];
     }, function (_d) {
       config = _d['default'];
     }, function (_b2) {
       settings = _b2['default'];
-    }, function (_f) {
-      Color = _f.Color;
-      Vector3 = _f.Vector3;
     }, function (_d2) {
       generateUUID = _d2.generateUUID;
     }],
@@ -45351,7 +45357,7 @@ $__System.registerDynamic("4", ["c4"], true, function($__require, exports, modul
   return module.exports;
 });
 
-$__System.register('1f', ['4'], function (_export) {
+$__System.register('20', ['4'], function (_export) {
   /**
   * @author Lianna Eeftinck / https://github.com/Leeft
   */
@@ -45400,8 +45406,8 @@ $__System.register('1f', ['4'], function (_export) {
     }
   };
 });
-$__System.register('6b', ['2', '6', '7', '35', 'a', '1f'], function (_export) {
-  var SCMAP, _createClass, _classCallCheck, _Object$assign, StarSystem, Color, DEFAULTS, Faction;
+$__System.register('6b', ['2', '6', '7', '20', '35', 'a'], function (_export) {
+  var SCMAP, _createClass, _classCallCheck, Color, _Object$assign, StarSystem, DEFAULTS, Faction;
 
   return {
     setters: [function (_4) {
@@ -45410,12 +45416,12 @@ $__System.register('6b', ['2', '6', '7', '35', 'a', '1f'], function (_export) {
       _createClass = _['default'];
     }, function (_2) {
       _classCallCheck = _2['default'];
+    }, function (_5) {
+      Color = _5.Color;
     }, function (_3) {
       _Object$assign = _3['default'];
     }, function (_a) {
       StarSystem = _a['default'];
-    }, function (_f) {
-      Color = _f.Color;
     }],
     execute: function () {
       /**
@@ -45603,13 +45609,13 @@ $__System.registerDynamic("51", ["54"], true, function($__require, exports, modu
   return module.exports;
 });
 
-$__System.registerDynamic("46", ["57", "24", "51"], true, function($__require, exports, module) {
+$__System.registerDynamic("46", ["57", "25", "51"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   var global = $__require('57'),
-      core = $__require('24'),
+      core = $__require('25'),
       ctx = $__require('51'),
       PROTOTYPE = 'prototype';
   var $export = function(type, name, source) {
@@ -45789,7 +45795,7 @@ $__System.registerDynamic("c7", ["46", "c6"], true, function($__require, exports
   return module.exports;
 });
 
-$__System.registerDynamic("24", [], true, function($__require, exports, module) {
+$__System.registerDynamic("25", [], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
@@ -45800,13 +45806,13 @@ $__System.registerDynamic("24", [], true, function($__require, exports, module) 
   return module.exports;
 });
 
-$__System.registerDynamic("c8", ["c7", "24"], true, function($__require, exports, module) {
+$__System.registerDynamic("c8", ["c7", "25"], true, function($__require, exports, module) {
   ;
   var define,
       global = this,
       GLOBAL = this;
   $__require('c7');
-  module.exports = $__require('24').Object.assign;
+  module.exports = $__require('25').Object.assign;
   return module.exports;
 });
 
@@ -45953,7 +45959,7 @@ $__System.register('9', ['d'], function (_export) {
     }
   };
 });
-$__System.register('2', ['6', '7', '9', '1f', 'a', '6b', '6a'], function (_export) {
+$__System.register('2', ['6', '7', '9', '20', 'a', '6b', '6a'], function (_export) {
   var _createClass, _classCallCheck, humanSort, Color, StarSystem, Faction, Goods, MAPREVISION, LYtoAU, SCMAP;
 
   return {
@@ -45961,10 +45967,10 @@ $__System.register('2', ['6', '7', '9', '1f', 'a', '6b', '6a'], function (_expor
       _createClass = _['default'];
     }, function (_2) {
       _classCallCheck = _2['default'];
+    }, function (_4) {
+      humanSort = _4.humanSort;
     }, function (_3) {
-      humanSort = _3.humanSort;
-    }, function (_f) {
-      Color = _f.Color;
+      Color = _3.Color;
     }, function (_a) {
       StarSystem = _a['default'];
     }, function (_b) {
